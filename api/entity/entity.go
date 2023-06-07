@@ -1,13 +1,18 @@
 package entity
 
-import "github.com/myanhtruong304/parser/package/config"
+import (
+	db "github.com/myanhtruong304/parser/db/sqlc"
+	"github.com/myanhtruong304/parser/package/config"
+)
 
 type Entity struct {
-	cfg config.Config
+	cfg  config.Config
+	repo db.Store
 }
 
-func NewEntity(cfg config.Config) Entity {
+func NewEntity(cfg config.Config, store db.Store) Entity {
 	return Entity{
-		cfg: cfg,
+		cfg:  cfg,
+		repo: store,
 	}
 }

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+
+import "rpc_create_wallet.proto";
+
+option go_package="github.com/myanhtruong304/parser/pb";
+
+service Pay68 {
+    rpc CreateWallet (CreateWalletRequest) returns (CreateWalletResponse) {}
+}

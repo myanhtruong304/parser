@@ -13,16 +13,21 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "postgresql://root:root@localhost:5433/pay68?sslmode=disable" -verbose down
 
-seed-db:
-	migrate -path db/seed -database "postgresql://root:root@localhost:5433/pay68?sslmode=disable" -verbose up
-
+seed:
+	go run ./cmd/db/main.go
 sqlc:
 	sqlc generate
 
 server:
-	go run ./cmd/main.go
+	go run ./cmd/api/main.go
 
 mock:
-	mockgen -package mockdb -destination db/mock/store.go github.com/pay68/db/sqlc Store
+	mockgen -package mockdb -destination db/mock/store.go github.com/parser/db/sqlc Store
 
-.PHONY: postgres createdb dropdb migrateup migratedown seed-db sqlc test server mock
+proto:
+	rm -f pb/*.go
+	$ protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+    --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+    proto/*.proto
+
+.PHONY: postgres createdb dropdb migrateup migratedown seed-db sqlc test server mock proto

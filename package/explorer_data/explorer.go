@@ -22,13 +22,13 @@ func (e *Explorer) ChainSelect(chain string) Chain {
 	switch c := chain; c {
 	case "bsc":
 		return Chain{
-			ExplorerUri: e.cfg.BscScanUri,
-			APIKey:      e.cfg.BscScanAPIKey,
+			ExplorerUri: e.cfg.BSC_SCAN_URI,
+			APIKey:      e.cfg.BSC_SCAN_API_KEY,
 		}
 	case "eth":
 		return Chain{
-			ExplorerUri: e.cfg.EthScanUri,
-			APIKey:      e.cfg.EthScanAPIKey,
+			ExplorerUri: e.cfg.ETH_SCAN_URI,
+			APIKey:      e.cfg.ETH_SCAN_API_KEY,
 		}
 	default:
 		return Chain{

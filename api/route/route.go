@@ -10,7 +10,7 @@ import (
 )
 
 func setupCORS(r *gin.Engine, cfg *config.Config) {
-	corsOrigins := strings.Split(cfg.ApiServer, ";")
+	corsOrigins := strings.Split(cfg.API_SERVER, ";")
 	r.Use(func(c *gin.Context) {
 		cors.New(
 			cors.Config{
@@ -26,11 +26,14 @@ func setupCORS(r *gin.Engine, cfg *config.Config) {
 	})
 }
 
-func NewRoute(r *gin.Engine, h *handler.Handler) gin.Engine {
+func NewRoute(cfg *config.Config, r *gin.Engine, h *handler.Handler) gin.Engine {
+	setupCORS(r, cfg)
+
 	v1 := r.Group("/api/v1")
 	groupTxn := v1.Group("/users")
 	{
 		groupTxn.POST("/post-wallet", h.CreateWallet)
+		groupTxn.GET("/get-wallet-txn", h.GetWalletTransaction)
 	}
 
 	return *r

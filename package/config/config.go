@@ -7,18 +7,22 @@ import (
 // Config stores all the configuration of the application.
 // The values are read by viper from a config file or env variables.
 type Config struct {
-	BscScanAPIKey  string `mapstructure:"BSC_SCAN_API_KEY"`
-	EthScanAPIKey  string `mapstructure:"ETH_SCAN_API_KEY"`
-	TronScanAPIKey string `mapstructure:"TRON_SCAN_API_KEY"`
+	BSC_SCAN_API_KEY  string `mapstructure:"BSC_SCAN_API_KEY"`
+	ETH_SCAN_API_KEY  string `mapstructure:"ETH_SCAN_API_KEY"`
+	TRON_SCAN_API_KEY string `mapstructure:"TRON_SCAN_API_KEY"`
 
-	BscScanUri  string `mapstructure:"BSC_SCAN_URI"`
-	EthScanUri  string `mapstructure:"ETH_SCAN_URI"`
-	TronScanUri string `mapstructure:"TRON_SCAN_URI"`
+	BSC_SCAN_URI  string `mapstructure:"BSC_SCAN_URI"`
+	ETH_SCAN_URI  string `mapstructure:"ETH_SCAN_URI"`
+	TRON_SCAN_URI string `mapstructure:"TRON_SCAN_URI"`
 
-	BscRPCUri string `mapstructure:"BSC_RCP_URI"`
-	EthRPCUri string `mapstructure:"ETH_RCP_URI"`
+	BSC_RCP_URI string `mapstructure:"BSC_RCP_URI"`
+	ETH_RCP_URI string `mapstructure:"ETH_RCP_URI"`
 
-	ApiServer string `mapstructure:"API_SERVER"`
+	API_SERVER string `mapstructure:"API_SERVER"`
+
+	DB_DRIVER      string `mapstructure:"DB_DRIVER"`
+	DB_SOURCE      string `mapstructure:"DB_SOURCE"`
+	SERVER_ADDRESS string `mapstructure:"SERVER_ADDRESS"`
 }
 
 // LoadConfig reads configuration from file or env variables.
