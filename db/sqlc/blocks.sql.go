@@ -12,17 +12,19 @@ import (
 const addBlock = `-- name: AddBlock :one
 INSERT INTO blocks (
     block_number,
-    processed
-) VALUES ($1, $2) RETURNING block_number
+    processed,
+    chain_id
+) VALUES ($1, $2, $3) RETURNING block_number
 `
 
 type AddBlockParams struct {
 	BlockNumber int32 `json:"block_number"`
 	Processed   bool  `json:"processed"`
+	ChainID     int32 `json:"chain_id"`
 }
 
 func (q *Queries) AddBlock(ctx context.Context, arg AddBlockParams) (int32, error) {
-	row := q.queryRow(ctx, q.addBlockStmt, addBlock, arg.BlockNumber, arg.Processed)
+	row := q.queryRow(ctx, q.addBlockStmt, addBlock, arg.BlockNumber, arg.Processed, arg.ChainID)
 	var block_number int32
 	err := row.Scan(&block_number)
 	return block_number, err
@@ -30,11 +32,12 @@ func (q *Queries) AddBlock(ctx context.Context, arg AddBlockParams) (int32, erro
 
 const getAllBlock = `-- name: GetAllBlock :many
 SELECT block_number FROM blocks
+WHERE chain_id = $1
 ORDER BY block_number ASC
 `
 
-func (q *Queries) GetAllBlock(ctx context.Context) ([]int32, error) {
-	rows, err := q.query(ctx, q.getAllBlockStmt, getAllBlock)
+func (q *Queries) GetAllBlock(ctx context.Context, chainID int32) ([]int32, error) {
+	rows, err := q.query(ctx, q.getAllBlockStmt, getAllBlock, chainID)
 	if err != nil {
 		return nil, err
 	}
@@ -56,29 +59,54 @@ func (q *Queries) GetAllBlock(ctx context.Context) ([]int32, error) {
 	return items, nil
 }
 
-const getNotProcessBlock = `-- name: GetNotProcessBlock :one
-SELECT block_number, processed FROM blocks
-WHERE processed = $1
+const getNotProcessBlock = `-- name: GetNotProcessBlock :many
+SELECT block_number, processed, chain_id FROM blocks
+WHERE processed = $1 AND chain_id = $2
 ORDER BY block_number ASC
-LIMIT 1
 `
 
-func (q *Queries) GetNotProcessBlock(ctx context.Context, processed bool) (Blocks, error) {
-	row := q.queryRow(ctx, q.getNotProcessBlockStmt, getNotProcessBlock, processed)
-	var i Blocks
-	err := row.Scan(&i.BlockNumber, &i.Processed)
-	return i, err
+type GetNotProcessBlockParams struct {
+	Processed bool  `json:"processed"`
+	ChainID   int32 `json:"chain_id"`
+}
+
+func (q *Queries) GetNotProcessBlock(ctx context.Context, arg GetNotProcessBlockParams) ([]Blocks, error) {
+	rows, err := q.query(ctx, q.getNotProcessBlockStmt, getNotProcessBlock, arg.Processed, arg.ChainID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Blocks
+	for rows.Next() {
+		var i Blocks
+		if err := rows.Scan(&i.BlockNumber, &i.Processed, &i.ChainID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOneBlock = `-- name: GetOneBlock :one
 SELECT block_number FROM blocks
-WHERE block_number = $1
+WHERE block_number = $1 AND chain_id = $2
 ORDER BY block_number ASC
 LIMIT 1
 `
 
-func (q *Queries) GetOneBlock(ctx context.Context, blockNumber int32) (int32, error) {
-	row := q.queryRow(ctx, q.getOneBlockStmt, getOneBlock, blockNumber)
+type GetOneBlockParams struct {
+	BlockNumber int32 `json:"block_number"`
+	ChainID     int32 `json:"chain_id"`
+}
+
+func (q *Queries) GetOneBlock(ctx context.Context, arg GetOneBlockParams) (int32, error) {
+	row := q.queryRow(ctx, q.getOneBlockStmt, getOneBlock, arg.BlockNumber, arg.ChainID)
 	var block_number int32
 	err := row.Scan(&block_number)
 	return block_number, err
@@ -87,18 +115,19 @@ func (q *Queries) GetOneBlock(ctx context.Context, blockNumber int32) (int32, er
 const updateBlockProcess = `-- name: UpdateBlockProcess :one
 UPDATE blocks
 SET 
-    processed = $2
-WHERE block_number = $1 RETURNING block_number, processed
+    processed = $3
+WHERE block_number = $1 AND chain_id = $2 RETURNING block_number, processed, chain_id
 `
 
 type UpdateBlockProcessParams struct {
 	BlockNumber int32 `json:"block_number"`
+	ChainID     int32 `json:"chain_id"`
 	Processed   bool  `json:"processed"`
 }
 
 func (q *Queries) UpdateBlockProcess(ctx context.Context, arg UpdateBlockProcessParams) (Blocks, error) {
-	row := q.queryRow(ctx, q.updateBlockProcessStmt, updateBlockProcess, arg.BlockNumber, arg.Processed)
+	row := q.queryRow(ctx, q.updateBlockProcessStmt, updateBlockProcess, arg.BlockNumber, arg.ChainID, arg.Processed)
 	var i Blocks
-	err := row.Scan(&i.BlockNumber, &i.Processed)
+	err := row.Scan(&i.BlockNumber, &i.Processed, &i.ChainID)
 	return i, err
 }

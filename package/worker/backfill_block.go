@@ -3,14 +3,16 @@ package worker
 import (
 	"context"
 	"fmt"
+	"time"
 
 	db "github.com/myanhtruong304/parser/db/sqlc"
 )
 
-func (w *Worker) findMissingBlock() ([]int, error) {
-	blocks, err := w.store.GetAllBlock(context.Background())
+func (w *Worker) findMissingBlock(chain string) ([]int, error) {
+	blocks, err := w.store.GetAllBlock(context.Background(), w.chainID)
+
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	if len(blocks) < 1 {
@@ -38,18 +40,22 @@ func (w *Worker) findMissingBlock() ([]int, error) {
 }
 
 func (w *Worker) BackfillMissingBlocks() {
-
-	missingblock, err := w.findMissingBlock()
-	if err != nil {
-		fmt.Println("can not find missing block", err)
-	}
-	q := db.AddBlockParams{}
-	for _, block := range missingblock {
-		q.BlockNumber = int32(block)
-		q.Processed = false
-		_, err := w.store.AddBlock(context.Background(), q)
+	for {
+		missingblock, err := w.findMissingBlock(w.chainName)
+		// fmt.Println("missing block", missingblock)
 		if err != nil {
-			fmt.Println("can not backfill block", err)
+			fmt.Println("can not find missing block", err)
 		}
+		q := db.AddBlockParams{}
+		for _, block := range missingblock {
+			q.BlockNumber = int32(block)
+			q.Processed = false
+			q.ChainID = w.chainID
+			_, err := w.store.AddBlock(context.Background(), q)
+			if err != nil {
+				fmt.Println("can not backfill block", err)
+			}
+		}
+		time.Sleep(2 * time.Second)
 	}
 }

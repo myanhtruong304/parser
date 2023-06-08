@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/myanhtruong304/parser/db/sqlc"
 	"github.com/myanhtruong304/parser/package/model"
+	"github.com/myanhtruong304/parser/utils"
 )
 
 func (e *Entity) CreateWallet(c *gin.Context, req model.CreateWalletRequest) (*string, error) {
@@ -23,9 +24,10 @@ func (e *Entity) CreateWallet(c *gin.Context, req model.CreateWalletRequest) (*s
 }
 
 func (e *Entity) GetWalletTransaction(c *gin.Context, req model.GetWalletTransactionRequest) ([]db.Transactions, error) {
+	chain := utils.ChainSelect(req.Chain, e.cfg)
 	q := db.GetAllTxnParams{
 		WalletAddress: req.Address,
-		Chain:         req.Chain,
+		ChainID:       int32(chain.ChainID),
 	}
 
 	txn, err := e.repo.GetAllTxn(c, q)

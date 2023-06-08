@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/myanhtruong304/parser/package/model"
+	"github.com/myanhtruong304/parser/utils"
 )
 
 func (e *Explorer) GetBlockAtTimestamp(timestamp string) (*model.BlockByTimeStampResponse, error) {
@@ -16,9 +17,8 @@ func (e *Explorer) GetBlockAtTimestamp(timestamp string) (*model.BlockByTimeStam
 		closest = "before"
 	)
 
-	Chain := e.ChainSelect("bsc")
-
-	uri := fmt.Sprintf("%s?module=%s&action=%s&timestamp=%s&closest=%s&apikey=%s", Chain.ExplorerUri, module, action, timestamp, closest, Chain.APIKey)
+	chain := utils.ChainSelect(e.chain, e.cfg)
+	uri := fmt.Sprintf("%s?module=%s&action=%s&timestamp=%s&closest=%s&apikey=%s", chain.ExplorerUri, module, action, timestamp, closest, chain.ExplorerApiKey)
 
 	res, err := http.Get(uri)
 	if err != nil {

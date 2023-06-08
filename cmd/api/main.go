@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -15,11 +16,10 @@ import (
 	explorerData "github.com/myanhtruong304/parser/package/explorer_data"
 	"github.com/myanhtruong304/parser/package/rpc"
 	"github.com/myanhtruong304/parser/package/worker"
-	"github.com/myanhtruong304/parser/pb"
+	"github.com/myanhtruong304/parser/utils"
 )
 
 type Server struct {
-	pb.UnimplementedPay68Server
 	store  db.Store
 	router *gin.Engine
 }
@@ -44,19 +44,6 @@ func main() {
 		router: &routes,
 	}
 
-	client, err := ethclient.Dial(config.BSC_RCP_URI)
-
-	rpcHandler, err := rpc.NewRcpHandle(&config, client, store)
-	if err != nil {
-		log.Panic("main [rpc.NewRcpHandle]", err)
-	}
-
-	explorerHandler, err := explorerData.NewExplorerHandler(config)
-	if err != nil {
-		log.Panic("main [explorerData.NewExplorerHandler]", err)
-	}
-
-	worker := worker.NewWorker(&config, store, 10, rpcHandler, client, explorerHandler)
 	go func() {
 		err := server.Start(config.SERVER_ADDRESS)
 		if err != nil {
@@ -64,12 +51,33 @@ func main() {
 		}
 	}()
 
+	go chainProcess("bsc", &config, store, 2)
+	go chainProcess("eth", &config, store, 2)
+	select {}
+
+}
+
+func chainProcess(chain string, config *config.Config, store db.Store, numOfWorkers int) {
+	client, err := ethclient.Dial(utils.ChainSelect(chain, *config).RpcUri)
+	if err != nil {
+		fmt.Println("[NewRcpHandle] Can not dial client ", chain)
+	}
+
+	rpcHandler, err := rpc.NewRcpHandle(*config, store, chain)
+	if err != nil {
+		log.Panic("main [rpc.NewRcpHandle]", err)
+	}
+
+	explorerHandler, err := explorerData.NewExplorerHandler(*config, chain)
+	if err != nil {
+		log.Panic("main [explorerData.NewExplorerHandler]", err)
+	}
+
+	worker := worker.NewWorker(*config, store, 10, chain, client, rpcHandler, explorerHandler)
+
 	go worker.GetLatestblock()
 	go worker.GetLatestTxn()
 	go worker.BackfillMissingBlocks()
-
-	select {}
-
 }
 
 func (s *Server) Start(address string) error {

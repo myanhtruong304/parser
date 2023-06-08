@@ -10,14 +10,14 @@ import (
 
 type Querier interface {
 	AddBlock(ctx context.Context, arg AddBlockParams) (int32, error)
-	AddTxn(ctx context.Context, arg AddTxnParams) (Transactions, error)
+	AddTxn(ctx context.Context, arg AddTxnParams) (string, error)
 	CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallets, error)
-	GetAllBlock(ctx context.Context) ([]int32, error)
+	GetAllBlock(ctx context.Context, chainID int32) ([]int32, error)
 	GetAllTxn(ctx context.Context, arg GetAllTxnParams) ([]Transactions, error)
 	GetListWallet(ctx context.Context) ([]string, error)
-	GetNotProcessBlock(ctx context.Context, processed bool) (Blocks, error)
-	GetOneBlock(ctx context.Context, blockNumber int32) (int32, error)
-	GetOneTxn(ctx context.Context, txnHash string) (Transactions, error)
+	GetNotProcessBlock(ctx context.Context, arg GetNotProcessBlockParams) ([]Blocks, error)
+	GetOneBlock(ctx context.Context, arg GetOneBlockParams) (int32, error)
+	GetOneTxn(ctx context.Context, arg GetOneTxnParams) (Transactions, error)
 	UpdateBlockProcess(ctx context.Context, arg UpdateBlockProcessParams) (Blocks, error)
 }
 

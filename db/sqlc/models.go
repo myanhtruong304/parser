@@ -12,16 +12,25 @@ import (
 type Blocks struct {
 	BlockNumber int32 `json:"block_number"`
 	Processed   bool  `json:"processed"`
+	ChainID     int32 `json:"chain_id"`
 }
 
 type Transactions struct {
-	ID            int32  `json:"id"`
-	WalletAddress string `json:"wallet_address"`
-	Chain         string `json:"chain"`
-	ChainID       int32  `json:"chain_id"`
-	TxnHash       string `json:"txn_hash"`
-	FromAdd       string `json:"from_add"`
-	ToAdd         string `json:"to_add"`
+	ID             int32     `json:"id"`
+	WalletAddress  string    `json:"wallet_address"`
+	Chain          string    `json:"chain"`
+	ChainID        int32     `json:"chain_id"`
+	TxnHash        string    `json:"txn_hash"`
+	FromAddress    string    `json:"from_address"`
+	ToAddress      string    `json:"to_address"`
+	BlockCreatedAt time.Time `json:"block_created_at"`
+	Block          int32     `json:"block"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	Sequence       int32     `json:"sequence"`
+	Type           string    `json:"type"`
+	Fee            string    `json:"fee"`
+	Metadata       string    `json:"metadata"`
 }
 
 type Wallets struct {

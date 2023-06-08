@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const addTxn = `-- name: AddTxn :one
@@ -15,54 +16,70 @@ INSERT INTO transactions (
     chain,
     chain_id,
     txn_hash,
-    from_add,
-    to_add
-) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, wallet_address, chain, chain_id, txn_hash, from_add, to_add
+    from_address,
+    to_address,
+    block_created_at,
+    block,
+    status, 
+    created_at,
+    sequence,
+    type,
+    fee,
+    metadata
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING txn_hash
 `
 
 type AddTxnParams struct {
-	WalletAddress string `json:"wallet_address"`
-	Chain         string `json:"chain"`
-	ChainID       int32  `json:"chain_id"`
-	TxnHash       string `json:"txn_hash"`
-	FromAdd       string `json:"from_add"`
-	ToAdd         string `json:"to_add"`
+	WalletAddress  string    `json:"wallet_address"`
+	Chain          string    `json:"chain"`
+	ChainID        int32     `json:"chain_id"`
+	TxnHash        string    `json:"txn_hash"`
+	FromAddress    string    `json:"from_address"`
+	ToAddress      string    `json:"to_address"`
+	BlockCreatedAt time.Time `json:"block_created_at"`
+	Block          int32     `json:"block"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	Sequence       int32     `json:"sequence"`
+	Type           string    `json:"type"`
+	Fee            string    `json:"fee"`
+	Metadata       string    `json:"metadata"`
 }
 
-func (q *Queries) AddTxn(ctx context.Context, arg AddTxnParams) (Transactions, error) {
+func (q *Queries) AddTxn(ctx context.Context, arg AddTxnParams) (string, error) {
 	row := q.queryRow(ctx, q.addTxnStmt, addTxn,
 		arg.WalletAddress,
 		arg.Chain,
 		arg.ChainID,
 		arg.TxnHash,
-		arg.FromAdd,
-		arg.ToAdd,
+		arg.FromAddress,
+		arg.ToAddress,
+		arg.BlockCreatedAt,
+		arg.Block,
+		arg.Status,
+		arg.CreatedAt,
+		arg.Sequence,
+		arg.Type,
+		arg.Fee,
+		arg.Metadata,
 	)
-	var i Transactions
-	err := row.Scan(
-		&i.ID,
-		&i.WalletAddress,
-		&i.Chain,
-		&i.ChainID,
-		&i.TxnHash,
-		&i.FromAdd,
-		&i.ToAdd,
-	)
-	return i, err
+	var txn_hash string
+	err := row.Scan(&txn_hash)
+	return txn_hash, err
 }
 
 const getAllTxn = `-- name: GetAllTxn :many
-SELECT id, wallet_address, chain, chain_id, txn_hash, from_add, to_add FROM transactions
-WHERE wallet_address = $1 AND chain = $2
+SELECT id, wallet_address, chain, chain_id, txn_hash, from_address, to_address, block_created_at, block, status, created_at, sequence, type, fee, metadata FROM transactions
+WHERE wallet_address = $1 AND chain_id = $2
 `
 
 type GetAllTxnParams struct {
 	WalletAddress string `json:"wallet_address"`
-	Chain         string `json:"chain"`
+	ChainID       int32  `json:"chain_id"`
 }
 
 func (q *Queries) GetAllTxn(ctx context.Context, arg GetAllTxnParams) ([]Transactions, error) {
-	rows, err := q.query(ctx, q.getAllTxnStmt, getAllTxn, arg.WalletAddress, arg.Chain)
+	rows, err := q.query(ctx, q.getAllTxnStmt, getAllTxn, arg.WalletAddress, arg.ChainID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +93,16 @@ func (q *Queries) GetAllTxn(ctx context.Context, arg GetAllTxnParams) ([]Transac
 			&i.Chain,
 			&i.ChainID,
 			&i.TxnHash,
-			&i.FromAdd,
-			&i.ToAdd,
+			&i.FromAddress,
+			&i.ToAddress,
+			&i.BlockCreatedAt,
+			&i.Block,
+			&i.Status,
+			&i.CreatedAt,
+			&i.Sequence,
+			&i.Type,
+			&i.Fee,
+			&i.Metadata,
 		); err != nil {
 			return nil, err
 		}
@@ -93,13 +118,18 @@ func (q *Queries) GetAllTxn(ctx context.Context, arg GetAllTxnParams) ([]Transac
 }
 
 const getOneTxn = `-- name: GetOneTxn :one
-SELECT id, wallet_address, chain, chain_id, txn_hash, from_add, to_add FROM transactions
-WHERE txn_hash = $1
+SELECT id, wallet_address, chain, chain_id, txn_hash, from_address, to_address, block_created_at, block, status, created_at, sequence, type, fee, metadata FROM transactions
+WHERE txn_hash = $1 AND chain_id = $2
 LIMIT 1
 `
 
-func (q *Queries) GetOneTxn(ctx context.Context, txnHash string) (Transactions, error) {
-	row := q.queryRow(ctx, q.getOneTxnStmt, getOneTxn, txnHash)
+type GetOneTxnParams struct {
+	TxnHash string `json:"txn_hash"`
+	ChainID int32  `json:"chain_id"`
+}
+
+func (q *Queries) GetOneTxn(ctx context.Context, arg GetOneTxnParams) (Transactions, error) {
+	row := q.queryRow(ctx, q.getOneTxnStmt, getOneTxn, arg.TxnHash, arg.ChainID)
 	var i Transactions
 	err := row.Scan(
 		&i.ID,
@@ -107,8 +137,16 @@ func (q *Queries) GetOneTxn(ctx context.Context, txnHash string) (Transactions, 
 		&i.Chain,
 		&i.ChainID,
 		&i.TxnHash,
-		&i.FromAdd,
-		&i.ToAdd,
+		&i.FromAddress,
+		&i.ToAddress,
+		&i.BlockCreatedAt,
+		&i.Block,
+		&i.Status,
+		&i.CreatedAt,
+		&i.Sequence,
+		&i.Type,
+		&i.Fee,
+		&i.Metadata,
 	)
 	return i, err
 }

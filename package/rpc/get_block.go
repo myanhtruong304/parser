@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/k0kubun/pp"
 	db "github.com/myanhtruong304/parser/db/sqlc"
 )
 
@@ -17,9 +16,9 @@ func (r *RpcHandler) GetBlockData(blockNum int64) (*types.Block, error) {
 
 	q := db.UpdateBlockProcessParams{
 		BlockNumber: int32(blockNum),
+		ChainID:     int32(r.chainId),
 		Processed:   true,
 	}
-	pp.Println(q)
 	_, err = r.store.UpdateBlockProcess(context.Background(), q)
 	if err != nil {
 		return nil, err

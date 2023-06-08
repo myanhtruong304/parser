@@ -18,20 +18,27 @@ func (w *Worker) GetLatestblock(args ...string) error {
 			continue
 		}
 		blockNum, _ := strconv.Atoi(latestBlockNumber.Result)
-		_, err = w.store.GetOneBlock(context.Background(), int32(blockNum))
+		q := db.GetOneBlockParams{
+			BlockNumber: int32(blockNum),
+			ChainID:     w.chainID,
+		}
+		_, err = w.store.GetOneBlock(context.Background(), q)
 		if err == nil {
 			continue
 		}
 
-		q := db.AddBlockParams{
+		q2 := db.AddBlockParams{
 			BlockNumber: int32(blockNum),
 			Processed:   false,
+			ChainID:     w.chainID,
 		}
 
-		_, err = w.store.AddBlock(context.Background(), q)
+		_, err = w.store.AddBlock(context.Background(), q2)
 		if err != nil {
 			fmt.Println(err)
 		}
 		time.Sleep(1 * time.Millisecond)
+
+		// fmt.Println("Latest block ", latestBlockNumber.Result)
 	}
 }

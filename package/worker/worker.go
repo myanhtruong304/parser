@@ -6,6 +6,7 @@ import (
 	"github.com/myanhtruong304/parser/package/config"
 	explorerData "github.com/myanhtruong304/parser/package/explorer_data"
 	"github.com/myanhtruong304/parser/package/rpc"
+	"github.com/myanhtruong304/parser/utils"
 )
 
 type Worker struct {
@@ -15,15 +16,19 @@ type Worker struct {
 	rpcHandler   *rpc.RpcHandler
 	client       *ethclient.Client
 	explorerData *explorerData.Explorer
+	chainID      int32
+	chainName    string
 }
 
-func NewWorker(config *config.Config, store db.Store, numOfWorkers int, rpcHandler *rpc.RpcHandler, client *ethclient.Client, explorerData *explorerData.Explorer) Worker {
+func NewWorker(config config.Config, store db.Store, numOfWorkers int, chain string, client *ethclient.Client, rpcHandler *rpc.RpcHandler, exploreHandler *explorerData.Explorer) Worker {
 	return Worker{
-		config:       config,
+		config:       &config,
 		store:        store,
 		numOfWorkers: numOfWorkers,
 		rpcHandler:   rpcHandler,
 		client:       client,
-		explorerData: explorerData,
+		explorerData: exploreHandler,
+		chainName:    utils.ChainSelect(chain, config).ChainName,
+		chainID:      int32(utils.ChainSelect(chain, config).ChainID),
 	}
 }

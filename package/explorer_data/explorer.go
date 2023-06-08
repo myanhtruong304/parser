@@ -5,35 +5,13 @@ import (
 )
 
 type Explorer struct {
-	cfg config.Config
+	cfg   config.Config
+	chain string
 }
 
-type Chain struct {
-	ExplorerUri string
-	APIKey      string
-}
-
-func NewExplorerHandler(cfg config.Config) (*Explorer, error) {
+func NewExplorerHandler(cfg config.Config, chain string) (*Explorer, error) {
 	return &Explorer{
-		cfg: cfg,
+		cfg:   cfg,
+		chain: chain,
 	}, nil
-}
-func (e *Explorer) ChainSelect(chain string) Chain {
-	switch c := chain; c {
-	case "bsc":
-		return Chain{
-			ExplorerUri: e.cfg.BSC_SCAN_URI,
-			APIKey:      e.cfg.BSC_SCAN_API_KEY,
-		}
-	case "eth":
-		return Chain{
-			ExplorerUri: e.cfg.ETH_SCAN_URI,
-			APIKey:      e.cfg.ETH_SCAN_API_KEY,
-		}
-	default:
-		return Chain{
-			ExplorerUri: "",
-			APIKey:      "",
-		}
-	}
 }
